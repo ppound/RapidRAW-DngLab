@@ -4,3 +4,5 @@
 // This file is reserved for X-Trans specific sensor code.
 
 pub mod demosaic;
+pub mod ri;
+mod taps;

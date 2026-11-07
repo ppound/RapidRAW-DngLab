@@ -18,7 +18,7 @@ use super::{
   sensor::bayer::{
     bilinear::Bilinear4Channel, ppg::PPGDemosaic, superpixel::{Superpixel4Channel, SuperpixelQuarterRes3Channel}, Demosaic,
   },
-  sensor::xtrans::demosaic::{XTransDemosaic, XTransSuperpixelDemosaic},
+  sensor::xtrans::{demosaic::XTransSuperpixelDemosaic, ri::XTransRiDemosaic},
   xyz::Illuminant,
 };
 
@@ -93,6 +93,9 @@ impl Intermediate {
 pub struct RawDevelop {
   pub steps: Vec<ProcessingStep>,
   pub demosaic_algorithm: DemosaicAlgorithm,
+  /// Factor that brings the rescaled samples to a nominal [0, 1] for the X-Trans quality demosaic, whose constants
+  /// assume that scale: 1.0 unless the white level was changed before [`ProcessingStep::Rescale`].
+  pub demosaic_scale: f32,
 }
 
 impl Default for RawDevelop {
@@ -109,6 +112,7 @@ impl Default for RawDevelop {
         ProcessingStep::SRgb,
       ],
       demosaic_algorithm: DemosaicAlgorithm::default(),
+      demosaic_scale: 1.0,
     }
   }
 }
@@ -176,7 +180,9 @@ impl RawDevelop {
                 log::info!("X-Trans pattern (6x6) detected. Applying X-Trans demosaicing ({:?}).", self.demosaic_algorithm);
                 match self.demosaic_algorithm {
                   DemosaicAlgorithm::Quality => {
-                    let xtrans_demosaic = XTransDemosaic::new();
+                    // demosaics the white-balanced mosaic (the as-shot multipliers) and returns camera RGB
+                    let wb = rawimage.wb_coeffs;
+                    let xtrans_demosaic = XTransRiDemosaic::new(Some([wb[0], wb[1], wb[2]]), self.demosaic_scale);
                     xtrans_demosaic.demosaic(pixels, &config.cfa, &config.colors, roi)
                   }
                   DemosaicAlgorithm::Speed => {
