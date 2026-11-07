@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: LGPL-2.1
-// Ported from LightCraft (crates/raw/src/demosaic/xtrans_taps.rs, MIT OR Apache-2.0).
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright 2026 Paul Pound <paul.pound@gmail.com>
+// Also submitted to LightCraft as crates/raw/src/demosaic/xtrans_taps.rs (storytold/lightcraft#2926).
 
 //! Green filters of the X-Trans demosaic ([`super::ri`]). Generated, do not edit:
 //! `XB_AUG=8 XB_WRITE=… cargo run --release -p lightcraft-raw --example xtrans_bench -- <scenes> <xtrans_truth>; 25 training scenes`.

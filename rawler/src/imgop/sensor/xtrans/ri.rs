@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: LGPL-2.1
-// Ported from LightCraft (crates/raw/src/demosaic/xtrans_ri.rs, MIT OR Apache-2.0).
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright 2026 Paul Pound <paul.pound@gmail.com>
+// Also submitted to LightCraft as crates/raw/src/demosaic/xtrans_ri.rs (storytold/lightcraft#2926).
 
 //! X-Trans demosaicing: classified linear green, residual-interpolated red and blue.
 //!
