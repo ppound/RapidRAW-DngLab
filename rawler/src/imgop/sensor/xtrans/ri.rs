@@ -200,7 +200,12 @@ impl Tables {
       cand.push(DIRS.map(|(dx, dy)| {
         let find = |sgn: isize| (1..=3isize).find(|&k| col(px, py, sgn * k * dx, sgn * k * dy) == 1);
         let (kp, kn) = (find(1)?, find(-1)?);
-        Some(((kp * dy) * s + kp * dx, -(kn * dy) * s - kn * dx, kn as f32 / (kp + kn) as f32, kp as f32 / (kp + kn) as f32))
+        Some((
+          (kp * dy) * s + kp * dx,
+          -(kn * dy) * s - kn * dx,
+          kn as f32 / (kp + kn) as f32,
+          kp as f32 / (kp + kn) as f32,
+        ))
       }));
       inv_pairs.push(DIRS.map(|(dx, dy)| {
         let count = (-2..=2isize)
@@ -210,7 +215,10 @@ impl Tables {
         if count == 0 { 0.0 } else { 1.0 / count as f32 }
       }));
       inv_count.push([0u8, 2].map(|c| {
-        let count = (-3..=3isize).flat_map(|dy| (-3..=3isize).map(move |dx| (dx, dy))).filter(|&(dx, dy)| col(px, py, dx, dy) == c).count();
+        let count = (-3..=3isize)
+          .flat_map(|dy| (-3..=3isize).map(move |dx| (dx, dy)))
+          .filter(|&(dx, dy)| col(px, py, dx, dy) == c)
+          .count();
         if count == 0 { 0.0 } else { 1.0 / count as f32 }
       }));
       near.push([0u8, 2].map(|c| {
@@ -246,7 +254,9 @@ fn demosaic(m: &Mosaic, colour: &[u8; 36], gains: Option<[f32; 3]>, scale: f32) 
     return None;
   }
   let (ox, oy) = alignment(colour)?;
-  let gains = gains.filter(|g| g.iter().all(|v| v.is_finite() && *v > 0.0)).map_or([1.0; 3], |g| g.map(|v| v / g[1]));
+  let gains = gains
+    .filter(|g| g.iter().all(|v| v.is_finite() && *v > 0.0))
+    .map_or([1.0; 3], |g| g.map(|v| v / g[1]));
   let gains = gains.map(|g| g * scale);
   let t = Tables::new(&Pattern::canonical());
   let (tiles_x, tiles_y) = (w.div_ceil(TILE), h.div_ceil(TILE));
@@ -264,7 +274,10 @@ fn demosaic(m: &Mosaic, colour: &[u8; 36], gains: Option<[f32; 3]>, scale: f32) 
     for tx in 0..tiles_x {
       let x0 = tx * TILE;
       let cols = TILE.min(w - x0);
-      if let (Some(dst), Some(src)) = (row.get_mut(x0..x0 + cols), tiles.get(ty * tiles_x + tx).and_then(|b| b.get(r * TILE..r * TILE + cols))) {
+      if let (Some(dst), Some(src)) = (
+        row.get_mut(x0..x0 + cols),
+        tiles.get(ty * tiles_x + tx).and_then(|b| b.get(r * TILE..r * TILE + cols)),
+      ) {
         dst.copy_from_slice(src);
       }
     }
@@ -347,7 +360,15 @@ fn tile(m: &Mosaic, t: &Tables, gains: [f32; 3], (ox, oy): (usize, usize), x0: u
   let at = |i: usize, d: isize| (i as isize + d) as usize;
   let ones5 = [1f32; 5];
   let Scratch {
-    phase, class, v, raw, gd, g, tmp, w: work, ..
+    phase,
+    class,
+    v,
+    raw,
+    gd,
+    g,
+    tmp,
+    w: work,
+    ..
   } = s;
   let [w0, w1, w2, w3, w4, w5, w6, ..] = work;
 
@@ -492,7 +513,14 @@ impl Scratch {
     let at = |i: usize, d: isize| (i as isize + d) as usize;
     let ones7 = [1f32; 7];
     let Scratch {
-      phase, v, g, red, blue, tmp, w: work, ..
+      phase,
+      v,
+      g,
+      red,
+      blue,
+      tmp,
+      w: work,
+      ..
     } = self;
     let [w0, w1, w2, w3, _, w5, w6, w7, w8] = work;
     // masked sums over the colour's samples: Σg, Σc, Σg², Σgc (7 × 7 boxes, valid on [9, SIDE − 9)); their
@@ -663,7 +691,11 @@ mod tests {
 
   #[test]
   fn flat_colour_is_exact_in_every_phase_balance_and_scale() {
-    for (shift, gains, scale) in [((0, 0), None, 1.0), ((1, 2), Some([1.9, 1.0, 1.6]), 1.0), ((5, 3), Some([1.15, 1.0, 2.8]), 4096.0)] {
+    for (shift, gains, scale) in [
+      ((0, 0), None, 1.0),
+      ((1, 2), Some([1.9, 1.0, 1.6]), 1.0),
+      ((5, 3), Some([1.15, 1.0, 2.8]), 4096.0),
+    ] {
       let c = cfa(shift.0, shift.1);
       let want = [0.3f32, 0.55, 0.8].map(|v| v / scale);
       let p = mosaic(61, 47, &c, |_, _| want);
